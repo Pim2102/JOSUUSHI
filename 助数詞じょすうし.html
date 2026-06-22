@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมลักษณนามภาษาญี่ปุ่นแสนสนุก 助数詞 🌸</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Cute Thai & Japanese handwriting -->
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Mali', 'Zen Maru Gothic', cursive;
+            background-color: #fff5f6;
+            background-image: 
+                radial-gradient(#ffd1d7 1.5px, transparent 1.5px),
+                radial-gradient(#ffd1d7 1.5px, #fff5f6 1.5px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            overflow-x: hidden;
+        }
+        
+        .japanese-font {
+            font-family: 'Zen Maru Gothic', sans-serif;
+        }
+
+        /* Sakura Falling Animation */
+        .sakura {
+            position: absolute;
+            background-color: #ffb7c5;
+            border-radius: 100% 0 100% 100%;
+            pointer-events: none;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                left: calc(var(--left) + 20vw);
+            }
+        }
+
+        .btn-kawaii {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-bottom-width: 6px;
+        }
+        .btn-kawaii:hover {
+            transform: translateY(-4px);
+            filter: brightness(1.05);
+        }
+        .btn-kawaii:active {
+            transform: translateY(4px);
+            border-bottom-width: 0px;
+            margin-bottom: 6px;
+        }
+
+        .bouncy {
+            animation: bounce-anim 2.5s ease-in-out infinite;
+        }
+        @keyframes bounce-anim {
+            0%, 100% { transform: translateY(0px) rotate(-1deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+
+        .pop-in {
+            animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes pop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Custom Scrollbar for Cheat Sheet */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #ffeef0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #ffb7c5;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #ff91a4;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-3 relative">
+
+    <!-- Sakura Petals Background -->
+    <div id="sakura-container" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <!-- Top Action Buttons -->
+    <div class="fixed top-4 right-4 flex gap-2 z-40">
+        <button id="cheat-btn" onclick="openCheatSheet()" class="bg-amber-100 hover:bg-amber-200 border-4 border-amber-300 text-amber-700 rounded-full px-4 py-2 flex items-center gap-1 shadow-md font-bold transition-all text-sm md:text-base">
+            📖 โพยลักษณนาม
+        </button>
+        <button id="music-toggle" onclick="toggleMusic()" class="bg-white border-4 border-pink-300 text-pink-500 rounded-full w-12 h-12 flex items-center justify-center shadow-md text-xl hover:scale-110 active:scale-95 transition-all" title="เปิด/ปิดเสียงเพลงคลอ">
+            🎵
+        </button>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="relative z-10 bg-white/95 rounded-[2.5rem] border-8 border-pink-200 shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col min-h-[580px] md:min-h-[620px]">
+        
+        <!-- Header Ribbon (Japanese Classroom Style) -->
+        <header class="bg-gradient-to-r from-pink-400 via-rose-300 to-amber-300 text-white p-4 text-center relative border-b-8 border-pink-100">
+            <div class="absolute top-2 left-4 text-xs font-bold bg-pink-500/20 px-3 py-0.5 rounded-full text-pink-100 hidden md:inline-block">じょすうし</div>
+            <h1 class="text-2xl md:text-3.5xl font-extrabold drop-shadow-md flex items-center justify-center gap-2">
+                🌸 คลาสคำลักษณนามญี่ปุ่นแสนสนุก 🌸
+            </h1>
+            <p class="text-pink-900/70 font-semibold text-xs md:text-sm mt-1">มองดูรูปภาพสังเกตลักษณะสิ่งของ แล้วตอบคำลักษณนามให้เหมาะสมกันเถอะ!</p>
+        </header>
+
+        <!-- Score & Status Bar -->
+        <div class="flex justify-between items-center px-6 md:px-12 py-3.5 bg-pink-50/50 border-b-4 border-pink-100 gap-2 text-sm md:text-base">
+            <div class="text-pink-600 font-bold bg-white border-2 border-pink-200 px-5 py-1.5 rounded-full shadow-sm">
+                ข้อที่: <span id="current-q" class="text-pink-700 font-bold text-lg">1</span> / 20
+            </div>
+            <div class="text-amber-600 font-bold bg-white border-2 border-amber-200 px-5 py-1.5 rounded-full shadow-sm flex items-center gap-1">
+                ⭐ คะแนน: <span id="score" class="text-amber-700 font-extrabold text-lg">0</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-pink-100 h-3 overflow-hidden relative">
+            <div id="progress-bar" class="bg-gradient-to-r from-pink-400 to-amber-400 h-full transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <!-- Main Workspace (Game Content) -->
+        <div class="flex-1 flex flex-col justify-between p-4 md:p-6 relative">
+            
+            <!-- Sensei & Question Box -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center my-auto">
+                
+                <!-- Sensei Neko Illustration -->
+                <div class="md:col-span-3 flex md:flex-col items-center justify-center gap-2">
+                    <div class="text-6xl md:text-7xl bouncy drop-shadow-md">🐱🎒</div>
+                    <div class="bg-white border-2 border-pink-200 text-pink-600 rounded-xl px-3 py-1 text-xs font-bold shadow-sm text-center">
+                        เนโกะเซนเซ
+                    </div>
+                </div>
+
+                <!-- Image Question Card (Only Image, No Title Reveal) -->
+                <div id="word-card" class="md:col-span-9 bg-pink-50/50 border-4 border-dashed border-pink-300 rounded-[2rem] p-4 text-center pop-in relative shadow-sm min-h-[220px] flex flex-col justify-center items-center">
+                    <div id="item-display-container" class="w-full flex items-center justify-center min-h-[150px] md:min-h-[180px] mb-2">
+                        <!-- Dynamic items will be injected here (either SVGs or Emojis) -->
+                    </div>
+                    <div class="text-pink-600 text-base md:text-lg font-bold">ถ้าจะนับสิ่งของที่มีลักษณะตามภาพนี้ ต้องใช้คำลักษณนามแบบไหนนะ? 🤔</div>
+                </div>
+
+            </div>
+
+            <!-- Choices Grid (Clean Kanji only, No Thai Hints) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-2">
+                <button onclick="selectChoice(0)" id="btn-0" class="btn-kawaii bg-white text-gray-700 border-rose-300 hover:bg-rose-50/50 border-4 rounded-2xl p-5 text-left flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-black bg-rose-100 text-rose-500 w-12 h-12 rounded-full flex items-center justify-center">A</span>
+                        <span class="text-2xl font-bold japanese-font text-gray-800" id="kanji-0">-</span>
+                    </div>
+                    <span class="text-2xl text-rose-300">👉</span>
+                </button>
+
+                <button onclick="selectChoice(1)" id="btn-1" class="btn-kawaii bg-white text-gray-700 border-sky-300 hover:bg-sky-50/50 border-4 rounded-2xl p-5 text-left flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-black bg-sky-100 text-sky-500 w-12 h-12 rounded-full flex items-center justify-center">B</span>
+                        <span class="text-2xl font-bold japanese-font text-gray-800" id="kanji-1">-</span>
+                    </div>
+                    <span class="text-2xl text-sky-300">👉</span>
+                </button>
+
+                <button onclick="selectChoice(2)" id="btn-2" class="btn-kawaii bg-white text-gray-700 border-amber-300 hover:bg-amber-50/50 border-4 rounded-2xl p-5 text-left flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-black bg-amber-100 text-amber-500 w-12 h-12 rounded-full flex items-center justify-center">C</span>
+                        <span class="text-2xl font-bold japanese-font text-gray-800" id="kanji-2">-</span>
+                    </div>
+                    <span class="text-2xl text-amber-300">👉</span>
+                </button>
+
+                <button onclick="selectChoice(3)" id="btn-3" class="btn-kawaii bg-white text-gray-700 border-emerald-300 hover:bg-emerald-50/50 border-4 rounded-2xl p-5 text-left flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-4">
+                        <span class="text-2xl font-black bg-emerald-100 text-emerald-500 w-12 h-12 rounded-full flex items-center justify-center">D</span>
+                        <span class="text-2xl font-bold japanese-font text-gray-800" id="kanji-3">-</span>
+                    </div>
+                    <span class="text-2xl text-emerald-300">👉</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Overlay: Start Game (No Register Input) -->
+        <div id="start-overlay" class="absolute inset-0 bg-gradient-to-br from-pink-400 via-rose-400 to-amber-300 z-50 flex flex-col items-center justify-center text-white p-6 text-center">
+            <div class="text-8xl mb-4 bouncy">🇯🇵🌸</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-3 drop-shadow-lg text-amber-100">助数詞じょすうし</h1>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6">คลาสลักษณนาม แสนสนุก!</h2>
+            <div class="bg-black/25 backdrop-blur-sm p-5 rounded-3xl max-w-md w-full mb-8 border border-white/20 text-sm md:text-base">
+                <p class="font-bold text-amber-200 text-lg mb-2">🌸 กฎการเรียนแสนสนุก 🌸</p>
+                <p class="mb-1">1. สังเกตลักษณะรูปภาพปริศนาและจำนวนสิ่งของ</p>
+                <p class="mb-1">2. ทายคำลักษณนามคันจิของสิ่งนั้นๆ ให้เหมาะสม</p>
+                <p>3. ร่วมสะสมดาวความรู้ให้ครบทั้ง 20 คะแนน! ⭐</p>
+            </div>
+            
+            <button onclick="startGame()" class="btn-kawaii bg-amber-400 hover:bg-amber-300 text-amber-900 border-amber-600 font-extrabold py-4 px-12 rounded-full text-2xl shadow-lg">
+                เข้าห้องเรียนกันเลย! 🌸
+            </button>
+        </div>
+
+        <!-- Overlay: Feedback Answers -->
+        <div id="feedback-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+            <div class="bg-white rounded-[2.5rem] p-6 max-w-md w-full text-center shadow-2xl border-b-[12px] border-pink-400" id="feedback-box">
+                <div id="feedback-icon" class="text-7xl mb-2 bouncy">🎉</div>
+                <h3 id="feedback-title" class="text-3xl font-extrabold mb-2 text-green-500">เก่งมากจ้า!</h3>
+                
+                <!-- Lesson Explanation Block -->
+                <div class="bg-pink-50/50 rounded-2xl p-4 mb-6 border-2 border-pink-100 text-left max-h-[220px] overflow-y-auto custom-scrollbar">
+                    <p class="text-xs text-pink-600 font-bold uppercase tracking-wider mb-1">💡 ความรู้เพิ่มเติมโดยเนโกะเซนเซ</p>
+                    <p id="feedback-explanation" class="text-gray-700 text-sm leading-relaxed">คำอธิบาย</p>
+                </div>
+
+                <button onclick="nextQuestion()" class="btn-kawaii w-full bg-pink-400 hover:bg-pink-300 text-white border-pink-600 font-bold py-3.5 px-4 rounded-full text-xl shadow-md">
+                    เรียนคำต่อไป ➜
+                </button>
+            </div>
+        </div>
+
+        <!-- Overlay: End Game Summary -->
+        <div id="end-overlay" class="hidden absolute inset-0 bg-gradient-to-br from-pink-400 to-purple-500 z-50 flex flex-col items-center justify-center text-white p-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-2 drop-shadow-lg text-amber-200">จบชั่วโมงเรียนแล้ว! 🎉</h2>
+            <div class="text-8xl mb-4 bouncy">🏆✨</div>
+            <p class="text-2xl mb-2 font-bold">ยินดีด้วยคนเก่ง!</p>
+            <p class="text-lg text-pink-100 mb-4">เรียนรู้วิชาลักษณนามภาษาญี่ปุ่นสำเร็จเรียบร้อย!</p>
+            
+            <div class="text-5xl font-black mb-6 bg-white text-pink-600 px-10 py-3.5 rounded-full shadow-xl border-b-8 border-pink-200">
+                ⭐ <span id="final-score">0</span> / 20 คะแนน
+            </div>
+            
+            <p id="final-message" class="text-lg md:text-xl max-w-md mb-8 bg-black/20 p-4 rounded-2xl">ยอดเยี่ยมมากเลย!</p>
+            
+            <div class="flex gap-4 flex-wrap justify-center">
+                <button onclick="resetGame()" class="btn-kawaii bg-amber-400 hover:bg-amber-300 text-amber-900 border-amber-600 font-bold py-3.5 px-10 rounded-full text-xl shadow-md">
+                    เรียนรู้อีกครั้ง 🔄
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Overlay: Cheat Sheet Modal -->
+    <div id="cheat-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] border-8 border-amber-200 p-6 max-w-lg w-full shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="text-center mb-3">
+                <span class="text-4xl">📖</span>
+                <h3 class="text-2xl font-extrabold text-amber-800">สรุปคำลักษณนามทั้ง 10 ประเภท</h3>
+                <p class="text-xs text-gray-500">แอบเปิดดูเวลาทำข้อสอบได้เลยนะคนเก่ง!</p>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3 my-3">
+                
+                <div class="bg-rose-50 border-2 border-rose-100 rounded-xl p-3">
+                    <p class="font-bold text-rose-700">1. つ (tsu) / 個 (こ - ko)</p>
+                    <p class="text-sm text-gray-600">นับของชิ้นเล็ก ทั่วไป เช่น แอปเปิ้ล, ไข่, แก้วน้ำเปล่า, นาฬิกา</p>
+                </div>
+
+                <div class="bg-blue-50 border-2 border-blue-100 rounded-xl p-3">
+                    <p class="font-bold text-blue-700">2. 枚 (まい - mai)</p>
+                    <p class="text-sm text-gray-600">นับของเป็นแผ่นบางๆ เช่น กระดาษ, เสื้อเชิ้ต, จาน, แผ่น CD</p>
+                </div>
+
+                <div class="bg-amber-50 border-2 border-amber-100 rounded-xl p-3">
+                    <p class="font-bold text-amber-700">3. 本 (ほん - hon / pon / bon)</p>
+                    <p class="text-sm text-gray-600">นับวัตถุเรียวยาวเป็นแท่ง/ขวด เช่น ดินสอ, ร่ม, ต้นไม้, กล้วย, ขวดโค้ก</p>
+                </div>
+
+                <div class="bg-emerald-50 border-2 border-emerald-100 rounded-xl p-3">
+                    <p class="font-bold text-emerald-700">4. 冊 (さつ - satsu)</p>
+                    <p class="text-sm text-gray-600">นับจำนวนหนังสือ เช่น พจนานุกรม, สมุดโน้ต, หนังสือทั่วไป</p>
+                </div>
+
+                <div class="bg-purple-50 border-2 border-purple-100 rounded-xl p-3">
+                    <p class="font-bold text-purple-700">5. 匹 (ひき - hiki / piki / biki)</p>
+                    <p class="text-sm text-gray-600">นับสัตว์ขนาดเล็ก, แมลง, สัตว์ปีก เช่น สุนัข, แมว, ปลา, นก, ลิง, กระต่าย</p>
+                </div>
+
+                <div class="bg-orange-50 border-2 border-orange-100 rounded-xl p-3">
+                    <p class="font-bold text-orange-700">6. 階 (かい - kai / gai)</p>
+                    <p class="text-sm text-gray-600">บอกเลขชั้นอาคาร เช่น ชั้น 1 (いっかい), ชั้น 3 (さんかい/さんがい)</p>
+                </div>
+
+                <div class="bg-cyan-50 border-2 border-cyan-100 rounded-xl p-3">
+                    <p class="font-bold text-cyan-700">7. 台 (だい - dai)</p>
+                    <p class="text-sm text-gray-600">นับยานพาหนะ หรือ เครื่องใช้ไฟฟ้า เช่น รถจักรยาน, รถยนต์, ตู้เย็น, โทรทัศน์</p>
+                </div>
+
+                <div class="bg-teal-50 border-2 border-teal-100 rounded-xl p-3">
+                    <p class="font-bold text-teal-700">8. 杯 (はい - hai / pai / bai)</p>
+                    <p class="text-sm text-gray-600">นับภาชนะเป็นถ้วย แก้ว ชามที่มีน้ำ/อาหาร เช่น กาแฟ, ชาเขียว, ราเม็ง</p>
+                </div>
+
+                <div class="bg-indigo-50 border-2 border-indigo-100 rounded-xl p-3">
+                    <p class="font-bold text-indigo-700">9. 人 (にん - nin / ひとり / ふたり)</p>
+                    <p class="text-sm text-gray-600">นับจำนวนคน (1 คน = ひとり, 2 คน = ふたり, ตั้งแต่ 3 คนขึ้นไปใช้ にん เช่น よにん)</p>
+                </div>
+
+                <div class="bg-fuchsia-50 border-2 border-fuchsia-100 rounded-xl p-3">
+                    <p class="font-bold text-fuchsia-700">10. 足 (そく - soku / zoku)</p>
+                    <p class="text-sm text-gray-600">นับจำนวนรองเท้า ถุงเท้า เป็นคู่ (1 คู่ = いっそく)</p>
+                </div>
+
+            </div>
+
+            <button onclick="closeCheatSheet()" class="btn-kawaii bg-amber-400 hover:bg-amber-300 text-amber-950 border-amber-600 font-bold py-3.5 rounded-full text-lg shadow-md w-full mt-2">
+                กลับเข้าบทเรียน 🌸
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let backgroundMusicSource = null;
+        let isMusicOn = false;
+
+        function playSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Double Ding Chime
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+
+                    setTimeout(() => {
+                        const osc2 = audioCtx.createOscillator();
+                        const gain2 = audioCtx.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioCtx.destination);
+                        osc2.type = 'triangle';
+                        osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+                        gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                        osc2.start();
+                        osc2.stop(audioCtx.currentTime + 0.3);
+                    }, 80);
+
+                } else if (type === 'wrong') {
+                    // Buzz Sound
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+
+                } else if (type === 'victory') {
+                    // Ta-Da Flourish
+                    const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+                    notes.forEach((freq, index) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.setValueAtTime(freq, audioCtx.currentTime + (index * 0.1));
+                        g.gain.setValueAtTime(0.2, audioCtx.currentTime + (index * 0.1));
+                        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (index * 0.1) + 0.4);
+                        o.start(audioCtx.currentTime + (index * 0.1));
+                        o.stop(audioCtx.currentTime + (index * 0.1) + 0.4);
+                    });
+                }
+            } catch (e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function startSoftBgMusic() {
+            if (!isMusicOn) return;
+            try {
+                if (backgroundMusicSource) {
+                    backgroundMusicSource.stop();
+                }
+                const notes = [293.66, 329.63, 392.00, 440.00, 493.88]; // Pentatonic-ish scale
+                
+                function playNextBeat() {
+                    if (!isMusicOn) return;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.type = 'sine';
+                    osc.frequency.value = notes[Math.floor(Math.random() * notes.length)] * 2; 
+                    gain.gain.setValueAtTime(0.02, audioCtx.currentTime); 
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+                    
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 1.2);
+                    
+                    backgroundMusicSource = { stop: () => { osc.stop(); } };
+                    
+                    setTimeout(playNextBeat, 1500); 
+                }
+                playNextBeat();
+            } catch (e) {
+                console.log('Music error:', e);
+            }
+        }
+
+        function toggleMusic() {
+            const btn = document.getElementById('music-toggle');
+            if (isMusicOn) {
+                isMusicOn = false;
+                btn.innerText = '🔇';
+                if (backgroundMusicSource) backgroundMusicSource.stop();
+            } else {
+                isMusicOn = true;
+                btn.innerText = '🎵';
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                startSoftBgMusic();
+            }
+        }
+
+        const countersData = [
+            // Category 1: つ / 個 (Varying counts: Apple 9, Egg 6, Clock 1)
+            { name: "แอปเปิ้ล (リンゴ)", emoji: "🍎", count: 9, correct: "つ / 個 (こ)", reason: "มีแอปเปิ้ลอยู่ทั้งหมด <strong>9 ผล</strong> นับเป็นของทรงกลมชิ้นเล็กทั่วไป <br>💡 <u>วิธีพูดจำนวน 9 ชิ้น:</u><br>• นับด้วยตระกูลพื้นเมือง (つ) ➜ <strong>ここのつ (kokonotsu)</strong><br>• นับด้วยคันจิจีน (個) ➜ <strong>きゅうこ (kyuuko)</strong> ครับ" },
+            { name: "ไข่ไก่ (卵 - たまご)", emoji: "🥚", count: 6, correct: "つ / 個 (こ)", reason: "มีไข่อยู่ทั้งหมด <strong>6 ฟอง</strong> นับในหมวดหมู่ของกลมเล็ก <br>💡 <u>วิธีพูดจำนวน 6 ชิ้น:</u><br>• นับด้วย (つ) ➜ <strong>むっつ (muttsu)</strong><br>• นับด้วย (個) ➜ <strong>ろっこ (rokko)</strong>" },
+            { name: "นาฬิกาปลุก (時計 - とけい)", emoji: "⏰", count: 1, correct: "つ / 個 (こ)", reason: "มีนาฬิกาปลุกตั้งโต๊ะอยู่ <strong>1 เรือน</strong> <br>💡 <u>วิธีพูดจำนวน 1 ชิ้น:</u><br>• นับด้วย (つ) ➜ <strong>ひとつ (hitotsu)</strong><br>• นับด้วย (個) ➜ <strong>いっこ (ikko)</strong>" },
+            
+            // Category 2: 枚 (Varying counts: Paper 9, Shirt 4, Plate 2, CD 10)
+            { name: "กระดาษเขียนจดหมาย (紙 - かみ)", emoji: "📄", count: 9, correct: "枚 (まい)", reason: "มีแผ่นกระดาษอยู่ทั้งหมด <strong>9 แผ่น</strong> ของที่มีลักษณะแบนบางเฉียบจะนับด้วย <strong>枚 (まい)</strong><br>💡 <u>วิธีพูดจำนวน 9 แผ่น:</u> ➜ <strong>きゅうまい (kyuumai)</strong> จ้า" },
+            { name: "เสื้อเชิ้ต (シャツ)", emoji: "👕", count: 4, correct: "枚 (まい)", reason: "มีเสื้อพับเรียบอยู่ทั้งหมด <strong>4 ตัว</strong> เสื้อผ้าบางๆ ก็นับเป็น <strong>枚 (まい)</strong><br>💡 <u>วิธีพูดจำนวน 4 ตัว:</u> ➜ <strong>よんまい (yonmai)</strong> จ้า" },
+            { name: "จานอาหารกระเบื้อง (さら)", emoji: "🍽️", count: 2, correct: "枚 (まい)", reason: "มีจานเปล่าอยู่ทั้งหมด <strong>2 ใบ</strong> จานทรงแบนก็นับเป็น <strong>枚 (まい)</strong><br>💡 <u>วิธีพูดจำนวน 2 ใบ:</u> ➜ <strong>にまい (nimai)</strong> จ้า" },
+            { name: "แผ่นซีดีเพลง (CD)", emoji: "💿", count: 10, correct: "枚 (まい)", reason: "มีแผ่นซีดีเพลงอยู่ทั้งหมด <strong>10 แผ่น</strong> นับเป็นแผ่นวงกลมบางใช้ <strong>枚 (まい)</strong><br>💡 <u>วิธีพูดจำนวน 10 แผ่น:</u> ➜ <strong>じゅうまい (juumai)</strong>" },
+
+            // Category 3: 本 (Varying counts: Pencil 3, Umbrella 8, Banana 9, Bottle 5)
+            { name: "ดินสอไม้ (えんぴつ)", emoji: "✏️", count: 3, correct: "本 (ほん)", reason: "มีดินสออยู่ทั้งหมด <strong>3 แท่ง</strong> วัตถุทรงกระบอกเรียวยาวใช้ลักษณนามพิเศษ <strong>本 (ほん)</strong><br>💡 <u>วิธีพูดจำนวน 3 แท่ง (ออกเสียงพิเศษ):</u> ➜ <strong>さんぼん (sanbon)</strong> ครับ!" },
+            { name: "ร่มกันฝน (かสิ)", emoji: "☂️", count: 8, correct: "本 (ほん)", reason: "มีร่มกันฝนพับเรียวอยู่ทั้งหมด <strong>8 คัน</strong> นับเป็นทรงยาว <strong>本 (ほん)</strong><br>💡 <u>วิธีพูดจำนวน 8 คัน (ออกเสียงพิเศษ):</u> ➜ <strong>はっぽん (happon)</strong> ครับ!" },
+            { name: "กล้วยหอม (バナナ)", emoji: "🍌", count: 9, correct: "本 (ほん)", reason: "มีกล้วยหอมเรียวอยู่ทั้งหมด <strong>9 ผล</strong> ผลไม้เรียวยาวก็นิยมใช้ <strong>本 (ほん)</strong><br>💡 <u>วิธีพูดจำนวน 9 ผล:</u> ➜ <strong>きゅうほん (kyuuhon)</strong> ครับ!" },
+            { name: "ขวดเครื่องดื่มโค้ก (コカ・コーラー)", emoji: "🍾", count: 5, correct: "本 (ほん)", reason: "มีขวดแก้วทรงสูงอยู่ทั้งหมด <strong>5 ขวด</strong> ขวดก็นับเป็น <strong>本 (ほん)</strong><br>💡 <u>วิธีพูดจำนวน 5 ขวด:</u> ➜ <strong>ごほん (gohon)</strong>" },
+
+            // Category 4: 冊 (Varying counts: Dictionary 1, Notebook 7)
+            { name: "พจนานุกรมเล่มหนา (辞書 - じしょ)", emoji: "📕", count: 1, correct: "冊 (さつ)", reason: "มีพจนานุกรมเล่มหนาอยู่ <strong>1 เล่ม</strong> หนังสือที่เย็บ/เข้าเล่มจะใช้ <strong>冊 (さつ)</strong><br>💡 <u>วิธีพูดจำนวน 1 เล่ม:</u> ➜ <strong>いっさつ (issatsu)</strong>" },
+            { name: "สมุดโน้ต (ノート)", emoji: "📓", count: 7, correct: "冊 (さつ)", reason: "มีสมุดจดบันทึกอยู่ทั้งหมด <strong>7 เล่ม</strong> นับเป็นหนังสือ <strong>冊 (さつ)</strong><br>💡 <u>วิธีพูดจำนวน 7 เล่ม:</u> ➜ <strong>ななさつ (nanasatsu)</strong>" },
+
+            // Category 5: 匹 (Varying counts: Dog 2, Cat 1)
+            { name: "สุนัข (犬 - いぬ)", emoji: "🐶", count: 2, correct: "匹 (ひき)", reason: "มีสุนัขแสนซนอยู่ทั้งหมด <strong>2 ตัว</strong> สัตว์บกขนาดเล็ก-ปานกลางใช้นับเป็นตัว <strong>匹 (ひき)</strong><br>💡 <u>วิธีพูดจำนวน 2 ตัว:</u> ➜ <strong>にひき (nihiki)</strong> จ้า" },
+            { name: "แมวเหมียว (猫 - ねこ)", emoji: "🐱", count: 1, correct: "匹 (ひき)", reason: "มีแมวเหมียวสุดคิ้วท์อยู่ <strong>1 ตัว</strong> นับสัตว์ตัวเล็กใช้ <strong>匹 (ひき)</strong><br>💡 <u>วิธีพูดจำนวน 1 ตัว (ออกเสียงพิเศษ):</u> ➜ <strong>いっぴき (ippiki)</strong>" },
+
+            // Category 6: 階 (Building Floor Highlighted 1)
+            { name: "ชั้นที่ 3 ของอาคาร (3階)", emoji: "🏢 [ชั้น 3]", count: 1, correct: "階 (かい)", reason: "ภาพของอาคารที่ระบุไปยัง <strong>ชั้นที่ 3 (3F)</strong> ลำดับขั้นอาคารจะนับด้วย <strong>階 (かい)</strong><br>💡 <u>วิธีพูดลำดับชั้นที่ 3 (ออกเสียงพิเศษ):</u> ➜ <strong>さんがい (sangai)</strong> หรือ <strong>さんかい</strong> ครับ" },
+
+            // Category 7: 台 (Varying counts: Beautiful Refrigerator SVG 9, Bike 3)
+            { name: "ตู้เย็นดีไซน์พรีเมียม (冷蔵庫 - れいぞうこ)", emoji: "REFRIGERATOR_SVG", count: 9, correct: "台 (だい)", reason: "มีตู้เย็นสแตนเลสอัจฉริยะอยู่ทั้งหมด <strong>9 เครื่อง</strong> เครื่องใช้ไฟฟ้าขนาดใหญ่นับเป็นเครื่องด้วย <strong>台 (だい)</strong><br>💡 <u>วิธีพูดจำนวน 9 เครื่อง:</u> ➜ <strong>きゅうだい (kyuudai)</strong> นะคนเก่ง!" },
+            { name: "รถจักรยาน (バイク / 自転車)", emoji: "🚲", count: 3, correct: "台 (だい)", reason: "มีรถจักรยานปั่นอยู่ทั้งหมด <strong>3 คัน</strong> ยานพาหนะทุกชนิดก็นับคันด้วย <strong>台 (だい)</strong><br>💡 <u>วิธีพูดจำนวน 3 คัน:</u> ➜ <strong>さんだい (sandai)</strong>" },
+
+            // Category 8: 杯 (Varying counts: Cup 1)
+            { name: "ถ้วยกาแฟร้อน (コーヒー)", emoji: "☕", count: 1, correct: "杯 (はい)", reason: "มีแก้วกาแฟร้อนอยู่ <strong>1 แก้ว</strong> ภาชนะเครื่องดื่มแบบแก้ว/ถ้วย/ชาม จะนับด้วย <strong>杯 (はい)</strong><br>💡 <u>วิธีพูดจำนวน 1 แก้ว (ออกเสียงพิเศษ):</u> ➜ <strong>いっぱい (ippai)</strong>" },
+
+            // Category 9: 人 (Varying counts: Girls 5)
+            { name: "เด็กผู้หญิงนักเรียน (女 - おんな)", emoji: "👩", count: 5, correct: "人 (にん)", reason: "มีกลุ่มเด็กนักเรียนหญิงอยู่ทั้งหมด <strong>5 คน</strong> ลักษณนามคนใช้ <strong>人 (にん)</strong><br>💡 <u>วิธีพูดจำนวน 5 คน:</u> ➜ <strong>ごにん (gonin)</strong> ครับ!" }
+        ];
+
+        const optionsPool = [
+            "つ / 個 (こ)",
+            "枚 (まい)",
+            "本 (ほん)",
+            "冊 (さつ)",
+            "匹 (ひき)",
+            "階 (かい)",
+            "台 (だい)",
+            "杯 (はい)",
+            "人 (にん)",
+            "足 (そく)"
+        ];
+
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let isGameActive = false;
+
+        function makeSakura() {
+            const container = document.getElementById('sakura-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const petal = document.createElement('div');
+                petal.classList.add('sakura');
+                petal.style.setProperty('--left', `${Math.random() * 80}vw`);
+                petal.style.left = `${Math.random() * 100}vw`;
+                petal.style.width = `${Math.random() * 8 + 8}px`;
+                petal.style.height = `${Math.random() * 8 + 8}px`;
+                petal.style.animationDuration = `${Math.random() * 4 + 5}s`;
+                petal.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(petal);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-overlay').classList.add('hidden');
+
+            // Copy and Shuffle Questions
+            questions = [...countersData];
+            shuffle(questions);
+
+            currentIdx = 0;
+            score = 0;
+            isGameActive = true;
+
+            if (isMusicOn) {
+                startSoftBgMusic();
+            }
+
+            document.getElementById('score').innerText = score;
+            loadQuestion();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderItems(item) {
+            const container = document.getElementById('item-display-container');
+            container.innerHTML = ''; // clear first
+            
+            // 1. Refrigerator Premium Metallics SVG
+            if (item.emoji === "REFRIGERATOR_SVG") {
+                let gridClass = "grid grid-cols-3 gap-2 justify-center items-center justify-items-center";
+                if (item.count <= 3) {
+                    gridClass = "flex justify-center gap-4";
+                } else if (item.count <= 6) {
+                    gridClass = "grid grid-cols-3 gap-2.5 justify-center justify-items-center";
+                } else {
+                    gridClass = "grid grid-cols-5 gap-1.5 justify-center justify-items-center";
+                }
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = `${gridClass} w-full max-w-lg mx-auto py-1.5`;
+                
+                // Exquisite, highly detailed refrigerator SVG
+                const svgString = `
+                <svg viewBox="0 0 100 150" class="w-12 h-18 md:w-14 md:h-22 inline-block drop-shadow-md transform hover:scale-105 transition-all">
+                  <defs>
+                    <linearGradient id="refBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#f1f5f9" />
+                      <stop offset="50%" stop-color="#cbd5e1" />
+                      <stop offset="100%" stop-color="#475569" />
+                    </linearGradient>
+                    <linearGradient id="doorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#ffffff" />
+                      <stop offset="75%" stop-color="#e2e8f0" />
+                      <stop offset="100%" stop-color="#cbd5e1" />
+                    </linearGradient>
+                    <linearGradient id="handleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#64748b" />
+                      <stop offset="100%" stop-color="#1e293b" />
+                    </linearGradient>
+                  </defs>
+                  <!-- Outer Body Border -->
+                  <rect x="6" y="6" width="88" height="138" rx="8" fill="url(#refBodyGrad)" stroke="#334155" stroke-width="2.5"/>
+                  <!-- Top Door (Freezer) -->
+                  <rect x="10" y="10" width="80" height="50" rx="4" fill="url(#doorGrad)" stroke="#94a3b8" stroke-width="1"/>
+                  <!-- Top Handle (Sleek Vertical) -->
+                  <rect x="14" y="24" width="4" height="22" rx="2" fill="url(#handleGrad)"/>
+                  <!-- Bottom Door (Main Cabinet) -->
+                  <rect x="10" y="64" width="80" height="72" rx="4" fill="url(#doorGrad)" stroke="#94a3b8" stroke-width="1"/>
+                  <!-- Bottom Handle -->
+                  <rect x="14" y="74" width="4" height="35" rx="2" fill="url(#handleGrad)"/>
+                  <!-- Touch Panel (Smart Tech Screen) -->
+                  <rect x="46" y="20" width="24" height="16" rx="2" fill="#0f172a" stroke="#475569" stroke-width="0.5"/>
+                  <!-- Cyber-blue and eco-green led markers -->
+                  <line x1="51" y1="24" x2="65" y2="24" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round"/>
+                  <line x1="51" y1="28" x2="59" y2="28" stroke="#34d399" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="63" cy="28" r="1.2" fill="#ef4444" />
+                  <!-- Water and Ice Dispenser -->
+                  <rect x="44" y="85" width="24" height="28" rx="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.7"/>
+                  <rect x="48" y="89" width="16" height="13" rx="1.5" fill="#0f172a"/>
+                  <path d="M 56 104 L 56 109" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                </svg>`;
+                
+                for (let i = 0; i < item.count; i++) {
+                    wrapper.innerHTML += svgString;
+                }
+                container.appendChild(wrapper);
+
+            // 2. Beautiful Highlighted Building (Floor 3) SVG
+            } else if (item.emoji === "🏢 [ชั้น 3]") {
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex justify-center items-center py-1";
+                wrapper.innerHTML = `
+                <svg viewBox="0 0 120 180" class="w-32 h-48 drop-shadow-xl transform hover:scale-105 transition-all">
+                  <!-- Road Base -->
+                  <rect x="5" y="165" width="110" height="10" rx="3" fill="#475569" />
+                  <!-- Building Outline -->
+                  <rect x="25" y="15" width="70" height="150" rx="6" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>
+                  <!-- Sleek Triangular Roof -->
+                  <path d="M 20 15 L 100 15 L 90 5 L 30 5 Z" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>
+                  
+                  <!-- Floor 4 Windows -->
+                  <rect x="35" y="25" width="12" height="15" rx="1.5" fill="#475569" />
+                  <rect x="54" y="25" width="12" height="15" rx="1.5" fill="#475569" />
+                  <rect x="73" y="25" width="12" height="15" rx="1.5" fill="#475569" />
+                  
+                  <!-- Highlighted 3rd Floor (Shining Gold neon panel) -->
+                  <rect x="27" y="52" width="66" height="32" rx="3" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5" class="animate-pulse"/>
+                  <text x="60" y="73" font-size="14" font-family="'Zen Maru Gothic', sans-serif" font-weight="900" fill="#a16207" text-anchor="middle">3F</text>
+                  
+                  <!-- Floor 2 Windows -->
+                  <rect x="35" y="95" width="12" height="15" rx="1.5" fill="#475569" />
+                  <rect x="54" y="95" width="12" height="15" rx="1.5" fill="#475569" />
+                  <rect x="73" y="95" width="12" height="15" rx="1.5" fill="#475569" />
+                  
+                  <!-- Lobby Entrance (Floor 1) -->
+                  <rect x="45" y="130" width="30" height="35" fill="#94a3b8" stroke="#334155" stroke-width="1.5" />
+                  <!-- Doors -->
+                  <rect x="48" y="140" width="11" height="25" fill="#334155" />
+                  <rect x="61" y="140" width="11" height="25" fill="#334155" />
+                </svg>`;
+                container.appendChild(wrapper);
+
+            // 3. Emojis Grouping
+            } else {
+                let sizeClass = "text-5xl md:text-6xl";
+                let gridClass = "grid grid-cols-3 gap-2 justify-center items-center justify-items-center";
+                
+                if (item.count === 1) {
+                    sizeClass = "text-8xl md:text-9xl";
+                    gridClass = "flex justify-center";
+                } else if (item.count <= 3) {
+                    sizeClass = "text-6xl md:text-7xl";
+                    gridClass = "flex justify-center gap-4 flex-wrap";
+                } else if (item.count <= 6) {
+                    sizeClass = "text-5xl md:text-6xl";
+                    gridClass = "grid grid-cols-3 gap-2.5 justify-center justify-items-center";
+                } else {
+                    sizeClass = "text-4xl md:text-5xl";
+                    gridClass = "grid grid-cols-5 gap-1.5 justify-center justify-items-center";
+                }
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = `${gridClass} w-full max-w-md mx-auto py-1.5 bouncy`;
+                
+                for (let i = 0; i < item.count; i++) {
+                    const span = document.createElement('span');
+                    span.className = `${sizeClass} drop-shadow-md select-none transform hover:scale-110 transition-transform inline-block`;
+                    span.innerText = item.emoji;
+                    wrapper.appendChild(span);
+                }
+                container.appendChild(wrapper);
+            }
+        }
+
+        function loadQuestion() {
+            if (currentIdx >= questions.length) {
+                endGame();
+                return;
+            }
+
+            const item = questions[currentIdx];
+            document.getElementById('current-q').innerText = currentIdx + 1;
+
+            // Set progress bar
+            const percent = ((currentIdx + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+
+            // Draw Dynamic Items based on count and type
+            renderItems(item);
+
+            // Setup Options (pure Kanji and hiragana)
+            const correctOpt = item.correct;
+            let wrongOpts = optionsPool.filter(opt => opt !== correctOpt);
+            shuffle(wrongOpts);
+            
+            let currentChoices = [correctOpt, wrongOpts[0], wrongOpts[1], wrongOpts[2]];
+            shuffle(currentChoices);
+
+            // Populate clean buttons (pure targets)
+            for (let i = 0; i < 4; i++) {
+                const optText = currentChoices[i];
+                document.getElementById(`kanji-${i}`).innerText = optText;
+            }
+
+            // Reset animation
+            const card = document.getElementById('word-card');
+            card.classList.remove('pop-in');
+            void card.offsetWidth; 
+            card.classList.add('pop-in');
+        }
+
+        function selectChoice(index) {
+            if (!isGameActive) return;
+
+            const selectedText = document.getElementById(`kanji-${index}`).innerText;
+            const currentItem = questions[currentIdx];
+            const isCorrect = selectedText === currentItem.correct;
+
+            const feedbackOverlay = document.getElementById('feedback-overlay');
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackExplanation = document.getElementById('feedback-explanation');
+
+            if (isCorrect) {
+                playSound('correct');
+                score++;
+                document.getElementById('score').innerText = score;
+                feedbackBox.className = "bg-white rounded-[2.5rem] p-6 max-w-md w-full text-center shadow-2xl border-b-[12px] border-emerald-400";
+                feedbackTitle.innerText = "ถูกต้องยอดเยี่ยม! 🌸";
+                feedbackTitle.className = "text-3xl font-extrabold mb-2 text-emerald-500";
+                feedbackIcon.innerText = "🌟🐱";
+            } else {
+                playSound('wrong');
+                feedbackBox.className = "bg-white rounded-[2.5rem] p-6 max-w-md w-full text-center shadow-2xl border-b-[12px] border-rose-400";
+                feedbackTitle.innerText = "ไม่เป็นไรนะ ลองดูความรู้กัน! 💡";
+                feedbackTitle.className = "text-3xl font-extrabold mb-2 text-rose-500";
+                feedbackIcon.innerText = "🧸";
+            }
+
+            // Explaining vocabulary clearly in the feedback card with specific count translations
+            feedbackExplanation.innerHTML = `ลักษณนามที่ถูกต้องของสิ่งนี้คือ <strong>${currentItem.correct}</strong><br><br>${currentItem.reason}`;
+            feedbackOverlay.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-overlay').classList.add('hidden');
+            currentIdx++;
+            loadQuestion();
+        }
+
+        function endGame() {
+            isGameActive = false;
+            playSound('victory');
+
+            document.getElementById('end-overlay').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+
+            const finalMsg = document.getElementById('final-message');
+            if (score === 20) {
+                finalMsg.innerText = `เก่งที่สุดในปฐพีเลยครับ! จำหมวดหมู่และวิธีการอ่านเสียงพิเศษของลักษณนามญี่ปุ่นได้เต็ม 100% สอบผ่านระดับเซนเซเนโกะแล้วจ้า! 🏆🇯🇵`;
+            } else if (score >= 15) {
+                finalMsg.innerText = `สุดยอดมากเลยครับ! เก่งมาก จำคำลักษณนามและจำแนกลักษณะของสิ่งของญี่ปุ่นได้เกือบครบถ้วนเลยล่ะ 🌟`;
+            } else if (score >= 10) {
+                finalMsg.innerText = `ทำได้เยี่ยมเลยนะจ๊ะ! ค่อยๆ ฝึกฝนทบทวนและจำแนกคำสรุปบ่อยๆ เดี๋ยวก็เต็มแน่นอน 🌸`;
+            } else {
+                finalMsg.innerText = `ไม่เป็นไรนะคนเก่ง ลองอ่านแผ่นโพยทบทวนลักษณนามทั้ง 10 ประเภท แล้วสู้ใหม่อีกสักรอบนะจ๊ะ! 💪✨`;
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('end-overlay').classList.add('hidden');
+            startGame();
+        }
+
+        // Cheat Sheet Modals
+        function openCheatSheet() {
+            playSound('correct');
+            document.getElementById('cheat-modal').classList.remove('hidden');
+        }
+
+        function closeCheatSheet() {
+            document.getElementById('cheat-modal').classList.add('hidden');
+        }
+
+        // Initialize things on window load
+        window.onload = function() {
+            makeSakura();
+        }
+    </script>
+</body>
+</html>
